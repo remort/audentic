@@ -1,0 +1,38 @@
+version: '3.9'
+
+x-db-settings: &db-settings
+  DB_HOST: db
+  DB_PORT: 5432
+  DB_USERNAME: &db-username usr
+  DB_PASSWORD: &db-password pass
+  DB_DATABASE: &db-database audentic
+
+x-audentic-api-env: &audentic-api-env
+  <<: *db-settings
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: *db-username
+      POSTGRES_PASSWORD: *db-password
+      POSTGRES_DB: *db-database
+    command: "postgres -c max_connections=20 -c shared_buffers=200MB"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      <<: *audentic-api-env
+    ports:
+      - 8000:8080
+    volumes:
+      - ./audentic_api:/app/audentic_api
+
+volumes:
+  postgres-data:
